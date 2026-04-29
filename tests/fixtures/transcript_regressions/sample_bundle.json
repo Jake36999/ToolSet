@@ -1,0 +1,145 @@
+{
+  "metadata": {
+    "tool": "semantic_slicer_v6.0",
+    "version": "6.0.0",
+    "timestamp": "2026-04-29T12:34:56Z",
+    "target_directory": "D:\\Aletheia_project\\DEV_TOOLS\\ToolSet",
+    "deterministic_mode": true
+  },
+  "layer_1_system_topology": {
+    "root_directory": "D:\\Aletheia_project\\DEV_TOOLS\\ToolSet",
+    "total_files": 35,
+    "total_directories": 8,
+    "scanned_extensions": [".py", ".md", ".csv", ".json"],
+    "directory_tree": {
+      "name": "ToolSet",
+      "type": "directory",
+      "children": [
+        {"name": "aletheia_tool_core", "type": "directory", "file_count": 4},
+        {"name": "aletheia_toolchain", "type": "directory", "file_count": 12},
+        {"name": "tests", "type": "directory", "file_count": 9},
+        {"name": "create_file_map_v3.py", "type": "file", "size": 4827}
+      ]
+    }
+  },
+  "layer_1_5_architecture_context": {
+    "external_dependencies": [],
+    "internal_modules": [
+      "aletheia_tool_core.security",
+      "aletheia_tool_core.manifest",
+      "aletheia_tool_core.reports",
+      "aletheia_tool_core.config"
+    ],
+    "entry_points": [
+      "create_file_map_v3.py",
+      "semantic_slicer_v6.0.py",
+      "workspace_packager_v2.3.py"
+    ]
+  },
+  "layer_1_7_import_graph": {
+    "create_file_map_v3.py": {
+      "imports": [
+        "aletheia_tool_core.manifest",
+        "aletheia_tool_core.security"
+      ],
+      "imported_by": []
+    },
+    "aletheia_tool_core.manifest": {
+      "imports": ["csv", "pathlib", "typing"],
+      "imported_by": ["create_file_map_v3.py", "tests.test_manifest"]
+    }
+  },
+  "layer_2_code_intelligence": {
+    "slices": [
+      {
+        "id": "slice_001",
+        "name": "create_file_map_v3.main",
+        "file": "create_file_map_v3.py",
+        "line_range": [1, 50],
+        "type": "function",
+        "complexity": 3,
+        "dependencies": ["argparse", "pathlib"],
+        "callers": [],
+        "callees": ["load_manifest", "scan_directory"]
+      },
+      {
+        "id": "slice_002",
+        "name": "aletheia_tool_core.manifest.load_manifest",
+        "file": "aletheia_tool_core/manifest.py",
+        "line_range": [10, 45],
+        "type": "function",
+        "complexity": 2,
+        "dependencies": ["csv"],
+        "callers": ["create_file_map_v3.main"],
+        "callees": []
+      }
+    ],
+    "call_graph": {
+      "create_file_map_v3.main": ["load_manifest", "scan_directory"],
+      "scan_directory": ["os.walk", "security.is_binary"]
+    }
+  },
+  "layer_2_2_semantic_density": {
+    "total_lines_of_code": 12743,
+    "total_functions": 42,
+    "total_classes": 8,
+    "average_function_length": 303,
+    "cyclomatic_complexity": {
+      "mean": 2.1,
+      "max": 8,
+      "min": 1
+    }
+  },
+  "layer_2_5_slice_dependency_graph": {
+    "slice_001": {
+      "depends_on": ["slice_002", "slice_005"],
+      "depended_by": [],
+      "risk_score": 2
+    }
+  },
+  "layer_2_7_patch_collision_risk": {
+    "high_risk_slices": [],
+    "medium_risk_slices": ["slice_001"],
+    "low_risk_slices": ["slice_002", "slice_003"]
+  },
+  "layer_2_8_patch_target_validation": {
+    "fingerprints": {
+      "create_file_map_v3.py": {
+        "sha1": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t",
+        "line_count": 156,
+        "last_modified": "2026-04-29T12:34:56"
+      }
+    }
+  },
+  "layer_2_9_structural_motifs": {
+    "stateful_io_operations": [
+      {
+        "function": "create_file_map_v3.main",
+        "file_operations": ["open", "write"],
+        "risk_level": "medium"
+      }
+    ],
+    "pure_compute_slices": [
+      "aletheia_tool_core.security.calculate_entropy",
+      "aletheia_tool_core.security.is_binary"
+    ]
+  },
+  "layer_x_uncertainties": {
+    "dynamic_imports": [],
+    "eval_exec_calls": [],
+    "syntax_errors": [],
+    "unresolved_symbols": []
+  },
+  "statistics": {
+    "files_analyzed": 35,
+    "files_skipped": 12,
+    "scan_duration_seconds": 1.23,
+    "skipped_reasons": {
+      "binary": 5,
+      "oversized": 2,
+      "permission_denied": 0,
+      "encoding_error": 0,
+      "excluded": 5
+    }
+  }
+}
