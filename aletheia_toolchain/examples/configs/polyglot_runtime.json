@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0",
+  "project_identity": {
+    "name": "my-polyglot-service",
+    "version": "0.1.0",
+    "description": "A project mixing Python, JavaScript/TypeScript, and related config/docs."
+  },
+  "source_scope": ["."],
+  "profiles": {
+    "default": {
+      "include_exts": [
+        ".py", ".js", ".ts", ".tsx", ".jsx", ".mjs",
+        ".json", ".md", ".yaml", ".yml", ".toml",
+        ".env.example", ".sh", ".bash"
+      ],
+      "exclude_dirs": [
+        ".git", ".venv", "venv", "__pycache__",
+        ".mypy_cache", ".pytest_cache", ".ruff_cache",
+        "node_modules", ".next", ".nuxt", "dist", "build",
+        "coverage", ".nyc_output", ".turbo"
+      ],
+      "max_file_size": 524288,
+      "suspicious_dirs": [
+        ".venv", "venv", "__pycache__", "node_modules",
+        ".next", ".nuxt", "dist", "build"
+      ],
+      "max_rows_soft": 1000,
+      "max_rows_hard": 5000,
+      "disabled_linter_rules": []
+    },
+    "python_only": {
+      "include_exts": [".py", ".toml", ".md"],
+      "exclude_dirs": [
+        ".git", ".venv", "venv", "__pycache__",
+        "node_modules", "dist", "build"
+      ],
+      "max_file_size": 524288,
+      "suspicious_dirs": [".venv", "venv", "__pycache__"],
+      "max_rows_soft": 500,
+      "max_rows_hard": 2000,
+      "disabled_linter_rules": []
+    },
+    "frontend_only": {
+      "include_exts": [
+        ".js", ".ts", ".tsx", ".jsx", ".mjs",
+        ".json", ".md", ".css", ".scss"
+      ],
+      "exclude_dirs": [
+        ".git", "node_modules", ".next", ".nuxt",
+        "dist", "build", "coverage"
+      ],
+      "max_file_size": 524288,
+      "suspicious_dirs": ["node_modules", ".next", "dist"],
+      "max_rows_soft": 800,
+      "max_rows_hard": 3000,
+      "disabled_linter_rules": []
+    }
+  },
+  "architecture_expectations": {
+    "required_paths": ["package.json", "pyproject.toml"],
+    "required_exts": [".py", ".ts"]
+  },
+  "risk_rules": {
+    "max_file_size": 524288,
+    "max_rows_soft": 1000,
+    "max_rows_hard": 5000,
+    "suspicious_dirs": [
+      ".venv", "venv", "node_modules", "__pycache__",
+      ".next", ".nuxt", "dist"
+    ]
+  },
+  "runtime_dynamics": {
+    "local": { "log_level": "INFO" },
+    "ci":    { "log_level": "WARNING" }
+  },
+  "gates": {
+    "require_manifest_doctor": true,
+    "block_on_pollution": true
+  },
+  "plugins": []
+}

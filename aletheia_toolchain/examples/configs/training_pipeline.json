@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "project_identity": {
+    "name": "my-training-pipeline",
+    "version": "0.1.0",
+    "description": "An ML training pipeline project with experiment tracking and model artifacts."
+  },
+  "source_scope": ["src", "scripts", "configs"],
+  "profiles": {
+    "default": {
+      "include_exts": [
+        ".py", ".yaml", ".yml", ".json", ".toml",
+        ".md", ".txt", ".sh", ".bash"
+      ],
+      "exclude_dirs": [
+        ".git", ".venv", "venv", "__pycache__",
+        ".mypy_cache", ".pytest_cache",
+        "output", "outputs", "runs",
+        "checkpoints", "checkpoint",
+        "models", "weights",
+        "data", "datasets", "raw", "processed",
+        "mlruns", "wandb", ".wandb",
+        "logs", "tb_logs", "tensorboard"
+      ],
+      "max_file_size": 262144,
+      "suspicious_dirs": [
+        ".venv", "venv", "__pycache__",
+        "output", "outputs", "checkpoints",
+        "models", "weights", "data", "datasets",
+        "mlruns", "wandb"
+      ],
+      "max_rows_soft": 400,
+      "max_rows_hard": 1500,
+      "disabled_linter_rules": []
+    },
+    "source_only": {
+      "include_exts": [".py", ".toml", ".md"],
+      "exclude_dirs": [
+        ".git", ".venv", "venv", "__pycache__",
+        "output", "outputs", "runs", "checkpoints",
+        "models", "weights", "data", "datasets",
+        "mlruns", "wandb", "logs"
+      ],
+      "max_file_size": 262144,
+      "suspicious_dirs": [
+        "output", "outputs", "checkpoints",
+        "models", "weights", "data"
+      ],
+      "required_exts": [".py"],
+      "max_rows_soft": 200,
+      "max_rows_hard": 800,
+      "disabled_linter_rules": []
+    },
+    "config_review": {
+      "include_exts": [".yaml", ".yml", ".json", ".toml"],
+      "exclude_dirs": [
+        ".git", ".venv", "venv", "__pycache__",
+        "output", "outputs", "models", "data"
+      ],
+      "max_file_size": 65536,
+      "suspicious_dirs": ["output", "outputs", "models"],
+      "max_rows_soft": 100,
+      "max_rows_hard": 500,
+      "disabled_linter_rules": ["R006"]
+    }
+  },
+  "architecture_expectations": {
+    "required_paths": ["pyproject.toml"],
+    "required_exts": [".py", ".yaml"]
+  },
+  "risk_rules": {
+    "max_file_size": 262144,
+    "max_rows_soft": 400,
+    "max_rows_hard": 1500,
+    "suspicious_dirs": [
+      ".venv", "venv", "__pycache__",
+      "output", "outputs", "checkpoints",
+      "models", "weights", "data", "datasets",
+      "mlruns", "wandb", "logs"
+    ]
+  },
+  "runtime_dynamics": {
+    "local": { "log_level": "DEBUG" },
+    "ci":    { "log_level": "WARNING" },
+    "agent": { "log_level": "INFO", "deterministic": true }
+  },
+  "gates": {
+    "require_manifest_doctor": true,
+    "block_on_pollution": true,
+    "require_deterministic_extraction": true
+  },
+  "plugins": []
+}

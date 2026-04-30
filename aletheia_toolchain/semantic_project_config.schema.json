@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aletheia.local/schemas/semantic_project_config.schema.json",
+  "title": "Aletheia Semantic Project Config",
+  "description": "Schema for aletheia_toolchain project configuration files consumed by create_file_map_v3, manifest_doctor, and tool_command_linter.",
+  "type": "object",
+  "required": ["schema_version"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Config schema version — must be '1.0'.",
+      "examples": ["1.0"]
+    },
+    "project_identity": {
+      "type": "object",
+      "description": "Human-readable metadata about the project.",
+      "properties": {
+        "name":        { "type": "string" },
+        "version":     { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "source_scope": {
+      "type": "array",
+      "description": "Root paths (relative or absolute) that tools should scan by default.",
+      "items": { "type": "string" }
+    },
+    "profiles": {
+      "type": "object",
+      "description": "Named scan profiles.  Each key is a profile name; each value is a profile object.",
+      "additionalProperties": {
+        "$ref": "#/$defs/profile"
+      }
+    },
+    "architecture_expectations": {
+      "type": "object",
+      "description": "Structural expectations used by manifest_doctor and downstream analysis tools.",
+      "properties": {
+        "required_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Relative paths that must appear in every manifest."
+        },
+        "required_exts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "File extensions (with leading dot) that must appear in every manifest."
+        }
+      },
+      "additionalProperties": true
+    },
+    "risk_rules": {
+      "type": "object",
+      "description": "Thresholds and toggles for manifest_doctor health checks.",
+      "properties": {
+        "max_file_size":   { "type": "integer", "minimum": 1 },
+        "max_rows_soft":   { "type": "integer", "minimum": 1 },
+        "max_rows_hard":   { "type": "integer", "minimum": 1 },
+        "suspicious_dirs": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "runtime_dynamics": {
+      "type": "object",
+      "description": "Settings that vary between execution environments (local, CI, agent).",
+      "additionalProperties": true
+    },
+    "gates": {
+      "type": "object",
+      "description": "Boolean flags that enable or disable phase gates.",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "plugins": {
+      "type": "array",
+      "description": "List of plugin module paths to load at runtime.",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "description": "A named scan profile that overrides built-in defaults.",
+      "properties": {
+        "include_exts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "File extensions to include (with leading dot, e.g. '.py')."
+        },
+        "exclude_dirs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Directory names to skip during scanning."
+        },
+        "max_file_size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum individual file size in bytes before WARN."
+        },
+        "suspicious_dirs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Directory names whose presence triggers a manifest WARN."
+        },
+        "required_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Relative paths that must appear in the manifest for it to be healthy."
+        },
+        "required_exts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Extensions that must appear at least once in the manifest."
+        },
+        "max_rows_soft": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Row count above which manifest_doctor emits WARN."
+        },
+        "max_rows_hard": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Row count above which manifest_doctor emits BLOCK."
+        },
+        "disabled_linter_rules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^R[0-9]{3}$"
+          },
+          "description": "Linter rule IDs to suppress for this profile (e.g. ['R002'])."
+        },
+        "format": {
+          "type": "string",
+          "enum": ["text", "json"],
+          "description": "Default slicer output format for this profile. Consumed by semantic_slicer_v7.0.py."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

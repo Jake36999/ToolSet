@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "project_identity": {
+    "name": "my-python-project",
+    "version": "0.1.0",
+    "description": "A standard Python library or application project."
+  },
+  "source_scope": ["."],
+  "profiles": {
+    "default": {
+      "include_exts": [".py", ".toml", ".md", ".json", ".yaml", ".yml", ".cfg", ".ini"],
+      "exclude_dirs": [
+        ".git", ".venv", "venv", "__pycache__",
+        ".mypy_cache", ".pytest_cache", ".ruff_cache",
+        "build", "dist", "*.egg-info"
+      ],
+      "max_file_size": 524288,
+      "suspicious_dirs": [".venv", "venv", "__pycache__", "node_modules"],
+      "max_rows_soft": 500,
+      "max_rows_hard": 2000,
+      "disabled_linter_rules": []
+    },
+    "ci": {
+      "include_exts": [".py", ".toml", ".md", ".json"],
+      "exclude_dirs": [
+        ".git", ".venv", "venv", "__pycache__",
+        ".mypy_cache", ".pytest_cache", ".ruff_cache",
+        "build", "dist"
+      ],
+      "max_file_size": 262144,
+      "suspicious_dirs": [".venv", "venv", "node_modules"],
+      "required_exts": [".py", ".toml"],
+      "max_rows_soft": 300,
+      "max_rows_hard": 1000,
+      "disabled_linter_rules": []
+    }
+  },
+  "architecture_expectations": {
+    "required_paths": ["pyproject.toml"],
+    "required_exts": [".py"]
+  },
+  "risk_rules": {
+    "max_file_size": 524288,
+    "max_rows_soft": 500,
+    "max_rows_hard": 2000,
+    "suspicious_dirs": [".venv", "venv", "__pycache__", "node_modules"]
+  },
+  "runtime_dynamics": {
+    "local": { "log_level": "INFO" },
+    "ci":    { "log_level": "WARNING" }
+  },
+  "gates": {
+    "require_manifest_doctor": true,
+    "block_on_pollution": false
+  },
+  "plugins": []
+}
