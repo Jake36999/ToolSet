@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "LocalToolAssistSession/v1.0",
+  "title": "LocalToolAssistSession",
+  "description": "Session schema for Local Tool Assist MCP Wrapper v1.0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "session_id",
+    "created_at",
+    "updated_at",
+    "request",
+    "execution_mode",
+    "review_state",
+    "policy",
+    "artifacts",
+    "steps",
+    "redaction"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "LocalToolAssistSession/v1.0"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^lta_[0-9]{8}T[0-9]{6}Z_[a-z0-9]{6}$"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "request": {
+      "type": "object",
+      "required": ["objective", "target_repo", "requested_by", "downstream_agent"],
+      "properties": {
+        "objective":        {"type": "string"},
+        "target_repo":      {"type": "string"},
+        "requested_by":     {"type": "string"},
+        "downstream_agent": {
+          "type": "string",
+          "enum": ["builder", "reviewer", "tool_assist", "unknown"]
+        }
+      }
+    },
+    "execution_mode": {
+      "type": "object",
+      "required": ["autonomy", "require_user_review_before_refine", "allow_command_execution"],
+      "properties": {
+        "autonomy":                          {"type": "string"},
+        "require_user_review_before_refine": {"type": "boolean"},
+        "allow_command_execution":           {"type": "boolean", "const": false}
+      }
+    },
+    "review_state": {
+      "type": "object",
+      "required": [
+        "scan_reviewed",
+        "manifest_reviewed",
+        "slice_approved",
+        "approved_by",
+        "approved_at",
+        "approval_notes"
+      ],
+      "properties": {
+        "scan_reviewed":     {"type": "boolean"},
+        "manifest_reviewed": {"type": "boolean"},
+        "slice_approved":    {"type": "boolean"},
+        "approved_by":       {"type": "string"},
+        "approved_at":       {"type": "string"},
+        "approval_notes":    {"type": "string"}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "forbid_shell",
+        "outputs_must_be_outside_toolchain",
+        "require_manifest_before_slice",
+        "require_linter_for_generated_commands",
+        "require_review_before_slice",
+        "approved_tools"
+      ],
+      "properties": {
+        "forbid_shell":                         {"type": "boolean"},
+        "outputs_must_be_outside_toolchain":    {"type": "boolean"},
+        "require_manifest_before_slice":        {"type": "boolean"},
+        "require_linter_for_generated_commands":{"type": "boolean"},
+        "require_review_before_slice":          {"type": "boolean"},
+        "approved_tools":                       {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "required": [
+        "manifest_csv",
+        "manifest_health_json",
+        "manifest_doctor_json",
+        "manifest_doctor_md",
+        "command_lint_json",
+        "slicer_json",
+        "slicer_md",
+        "final_markdown",
+        "final_python_bundle",
+        "archive_yaml"
+      ],
+      "properties": {
+        "manifest_csv":         {"type": "string"},
+        "manifest_health_json": {"type": "string"},
+        "manifest_doctor_json": {"type": "string"},
+        "manifest_doctor_md":   {"type": "string"},
+        "command_lint_json":    {"type": "string"},
+        "slicer_json":          {"type": "string"},
+        "slicer_md":            {"type": "string"},
+        "final_markdown":       {"type": "string"},
+        "final_python_bundle":  {"type": "string"},
+        "archive_yaml":         {"type": "string"}
+      }
+    },
+    "steps": {
+      "type": "array"
+    },
+    "redaction": {
+      "type": "object",
+      "required": ["enabled", "fingerprint_algorithm"],
+      "properties": {
+        "enabled":               {"type": "boolean"},
+        "fingerprint_algorithm": {"type": "string"}
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "_comment": "LM Studio local MCP stdio registration example for Local Tool Assist. Adjust paths if your ToolSet root differs. Field names follow the LM Studio mcp.json convention as of 2026-05; verify against your LM Studio release notes if registration fails.",
+  "mcpServers": {
+    "aletheia-local-tool-assist": {
+      "command": "python",
+      "args": ["-m", "local_tool_assist_mcp.mcp_server"],
+      "cwd": "D:\\Aletheia_project\\DEV_TOOLS\\ToolSet",
+      "env": {
+        "TOOLSET_ROOT": "D:\\Aletheia_project\\DEV_TOOLS\\ToolSet",
+        "LTA_OUTPUT_ROOT": "D:\\Aletheia_project\\DEV_TOOLS\\ToolSet\\local_tool_assist_outputs",
+        "LTA_REQUIRE_REVIEW": "1"
+      }
+    }
+  }
+}

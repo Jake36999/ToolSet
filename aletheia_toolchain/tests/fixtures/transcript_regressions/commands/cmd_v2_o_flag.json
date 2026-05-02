@@ -1,0 +1,6 @@
+{
+  "description": "create_file_map_v2 with -o flag — R001 BLOCK regression",
+  "command": "python create_file_map_v2.py . -o output.csv",
+  "expected_rule": "R001",
+  "expected_status": "BLOCK"
+}

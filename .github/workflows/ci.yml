@@ -1,0 +1,51 @@
+name: Aletheia Toolchain CI
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+    paths:
+      - "aletheia_toolchain/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    paths:
+      - "aletheia_toolchain/**"
+      - ".github/workflows/ci.yml"
+
+defaults:
+  run:
+    working-directory: aletheia_toolchain
+
+jobs:
+  test:
+    name: "Python ${{ matrix.python-version }} / ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip
+
+      - name: Run test suite
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "test-artifacts-${{ matrix.os }}-py${{ matrix.python-version }}"
+          path: aletheia_toolchain/test_artifacts/
+          if-no-files-found: ignore
+          retention-days: 7

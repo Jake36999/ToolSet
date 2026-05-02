@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "local-tool-assist-mcp"
+version = "0.1.0"
+description = "Backend MCP wrapper around the Aletheia developer toolchain"
+requires-python = ">=3.10"
+dependencies = [
+    "PyYAML>=6.0",
+    "jsonschema>=4.0",
+]
+
+# Tests can run without installation:
+#   cd ToolSet
+#   python -m unittest discover -s local_tool_assist_mcp/tests -p "test_*.py" -t . -v
+#
+# To install as editable (makes imports work from anywhere):
+#   cd ToolSet/local_tool_assist_mcp
+#   pip install -e .
+
+[tool.setuptools.packages.find]
+where = [".."]
+include = ["local_tool_assist_mcp*"]

@@ -1,0 +1,18 @@
+# CI failure artifacts — uploaded as build artifacts on failure, never committed
+test_artifacts/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Temporary report files written during tests or manual runs
+*_tmp_*.json
+*_tmp_*.md
+_tmp_*.json
+_tmp_*.md
+
+# Slicer / packager output that may land in the toolchain dir
+*_bundle_*.py
+*_bundle_*.json
+*_bundle_*.yaml

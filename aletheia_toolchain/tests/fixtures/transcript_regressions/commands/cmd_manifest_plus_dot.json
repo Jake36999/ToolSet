@@ -1,0 +1,6 @@
+{
+  "description": "semantic_slicer --manifest plus positional '.' — R004 BLOCK regression",
+  "command": "python semantic_slicer_v7.0.py --manifest manifest.csv . --deterministic",
+  "expected_rule": "R004",
+  "expected_status": "BLOCK"
+}

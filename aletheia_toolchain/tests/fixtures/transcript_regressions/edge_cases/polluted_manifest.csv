@@ -1,0 +1,4 @@
+root,rel_path,abs_path,ext,size,mtime_iso,sha1
+D:\Aletheia_project\DEV_TOOLS\ToolSet,main.py,D:\Aletheia_project\DEV_TOOLS\ToolSet\main.py,.py,512,2026-04-29T12:00:00,aabbccdd11223344556677889900aabb11223344
+D:\Aletheia_project\DEV_TOOLS\ToolSet,aletheia_toolchain_bundle_20260429_161325_bundle.py,D:\Aletheia_project\DEV_TOOLS\ToolSet\aletheia_toolchain_bundle_20260429_161325_bundle.py,.py,48270,2026-04-29T16:13:25,bbccdd11223344556677889900aabb1122334455
+D:\Aletheia_project\DEV_TOOLS\ToolSet,.venv/lib/site-packages/requests/__init__.py,D:\Aletheia_project\DEV_TOOLS\ToolSet\.venv\lib\site-packages\requests\__init__.py,.py,3200,2026-04-29T10:00:00,ccdd11223344556677889900aabb112233445566

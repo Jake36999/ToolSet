@@ -1,0 +1,6 @@
+{
+  "description": "semantic_slicer broad positional '.' without --manifest — R003 WARN regression",
+  "command": "python semantic_slicer_v7.0.py . --deterministic",
+  "expected_rule": "R003",
+  "expected_status": "WARN"
+}

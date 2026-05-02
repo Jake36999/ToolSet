@@ -1,0 +1,6 @@
+{
+  "description": "create_file_map_v3 with -o flag — R002 WARN regression",
+  "command": "python create_file_map_v3.py --roots . -o output.csv",
+  "expected_rule": "R002",
+  "expected_status": "WARN"
+}
