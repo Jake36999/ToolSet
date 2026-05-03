@@ -19,7 +19,12 @@ _TOOLCHAIN_ROOT = (
     pathlib.Path(__file__).parent.parent.parent / "aletheia_toolchain"
 ).resolve()
 
-_V1_ACTIONS = {"scan_directory", "validate_manifest", "lint_tool_command", "run_semantic_slice"}
+_REQUIRED_SCRIPTS = {
+    "create_file_map_v3.py", "manifest_doctor.py", "tool_command_linter.py", "semantic_slicer_v7.0.py",
+    "architecture_validator.py", "pipeline_gatekeeper.py", "bundle_diff_auditor.py", "workspace_packager_v2.4.py",
+    "notebook_packager_v3.1.py", "runtime_end_watcher.py", "oom_forensics_reporter.py", "runtime_slice_correlator.py",
+    "runtime_packager.py",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -28,8 +33,8 @@ _V1_ACTIONS = {"scan_directory", "validate_manifest", "lint_tool_command", "run_
 
 class TestRegistryStructure(unittest.TestCase):
 
-    def test_registry_has_exactly_four_actions(self):
-        self.assertEqual(set(REGISTRY.keys()), _V1_ACTIONS)
+    def test_registry_contains_required_scripts(self):
+        self.assertTrue(_REQUIRED_SCRIPTS.issubset({entry.script_name for entry in REGISTRY.values()}))
 
     def test_all_entries_are_tool_entry_instances(self):
         for name, entry in REGISTRY.items():
@@ -91,7 +96,7 @@ class TestReviewGateFlags(unittest.TestCase):
 class TestGetEntry(unittest.TestCase):
 
     def test_returns_correct_entry_for_known_action(self):
-        for action in _V1_ACTIONS:
+        for action in REGISTRY:
             entry = get_entry(action)
             self.assertEqual(entry.action, action)
 
@@ -122,13 +127,7 @@ class TestAllowedScriptNames(unittest.TestCase):
             self.assertIn(entry.script_name, ALLOWED_SCRIPT_NAMES)
 
     def test_known_scripts_are_present(self):
-        expected = {
-            "create_file_map_v3.py",
-            "manifest_doctor.py",
-            "tool_command_linter.py",
-            "semantic_slicer_v7.0.py",
-        }
-        self.assertEqual(ALLOWED_SCRIPT_NAMES, expected)
+        self.assertTrue(_REQUIRED_SCRIPTS.issubset(ALLOWED_SCRIPT_NAMES))
 
 
 # ---------------------------------------------------------------------------
@@ -322,6 +321,27 @@ class TestSlicerFlags(unittest.TestCase):
     def test_raises_without_target_repo(self):
         with self.assertRaises(ValueError):
             _slicer_flags({"manifest_csv": "/some/file_map.csv"}, self.session_dir)
+
+
+class TestRegistrySafety(unittest.TestCase):
+
+    def test_registered_scripts_resolve_under_aletheia_toolchain(self):
+        for entry in REGISTRY.values():
+            path = (_TOOLCHAIN_ROOT / entry.script_name).resolve()
+            self.assertTrue(path.exists(), f"missing script: {entry.script_name}")
+            self.assertTrue(str(path).startswith(str(_TOOLCHAIN_ROOT)))
+
+    def test_registry_data_disallows_shell_like_tokens(self):
+        disallowed = [";", "&&", "||", "|", "`", "$(", "../"]
+        for entry in REGISTRY.values():
+            values = [entry.action, entry.canonical_tool_name, entry.script_name, entry.working_directory]
+            for value in values:
+                for token in disallowed:
+                    self.assertNotIn(token, value, f"{value!r} contains {token!r}")
+
+    def test_unknown_tool_rejection(self):
+        with self.assertRaises(ValueError):
+            get_entry("totally_unknown_tool")
 
 
 if __name__ == "__main__":
