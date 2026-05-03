@@ -2,8 +2,8 @@
 
 import pathlib
 import sys
-from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional
+from dataclasses import dataclass, field
+from typing import Callable, Dict, List, Mapping, Optional, Sequence
 
 
 @dataclass(frozen=True)
@@ -11,12 +11,18 @@ class ToolEntry:
     """Immutable descriptor for one registered wrapper action."""
 
     action: str
-    script_name: str
-    timeout_seconds: int
-    requires_review_approval: bool
-    build_flags: Callable  # (params: dict, session_dir: Path) -> List[str]
-    collect_artifacts: Callable  # (params: dict, session_dir: Path) -> dict
-    primary_json_report_key: Optional[str]  # session["artifacts"] key for status read-back
+    canonical_tool_name: str = ""
+    script_name: str = ""
+    working_directory: str = "aletheia_toolchain"
+    allowed_outputs: Sequence[str] = field(default_factory=tuple)
+    exit_code_map: Mapping[int, str] = field(default_factory=dict)
+    io_requirements: Mapping[str, object] = field(default_factory=dict)
+    write_permissions: Sequence[str] = field(default_factory=tuple)
+    timeout_seconds: int = 60
+    requires_review_approval: bool = False
+    build_flags: Callable = lambda params, session_dir: []  # (params: dict, session_dir: Path) -> List[str]
+    collect_artifacts: Callable = lambda params, session_dir: {}  # (params: dict, session_dir: Path) -> dict
+    primary_json_report_key: Optional[str] = None  # session["artifacts"] key for status read-back
 
 
 # ---------------------------------------------------------------------------
@@ -115,48 +121,56 @@ def _slicer_artifacts(params: dict, session_dir: pathlib.Path) -> dict:
     return {"slicer_json": str(p) if p.exists() else ""}
 
 
+
+
+def _noop_flags(params: dict, session_dir: pathlib.Path) -> List[str]:
+    _ = (params, session_dir)
+    return []
+
+
+def _noop_artifacts(params: dict, session_dir: pathlib.Path) -> dict:
+    _ = (params, session_dir)
+    return {}
+
+
+def _entry(action: str, script_name: str, timeout_seconds: int, requires_review_approval: bool,
+           build_flags: Callable, collect_artifacts: Callable, primary_json_report_key: Optional[str]) -> ToolEntry:
+    return ToolEntry(
+        action=action,
+        canonical_tool_name=action,
+        script_name=script_name,
+        working_directory="aletheia_toolchain",
+        allowed_outputs=("json", "md", "csv"),
+        exit_code_map={0: "ok", 1: "error", 2: "usage_error"},
+        io_requirements={"requires_input": True, "emits_output": True},
+        write_permissions=("session_dir/intermediate",),
+        timeout_seconds=timeout_seconds,
+        requires_review_approval=requires_review_approval,
+        build_flags=build_flags,
+        collect_artifacts=collect_artifacts,
+        primary_json_report_key=primary_json_report_key,
+    )
+
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 
 REGISTRY: Dict[str, ToolEntry] = {
-    "scan_directory": ToolEntry(
-        action="scan_directory",
-        script_name="create_file_map_v3.py",
-        timeout_seconds=120,
-        requires_review_approval=False,
-        build_flags=_scan_flags,
-        collect_artifacts=_scan_artifacts,
-        primary_json_report_key="manifest_health_json",
-    ),
-    "validate_manifest": ToolEntry(
-        action="validate_manifest",
-        script_name="manifest_doctor.py",
-        timeout_seconds=60,
-        requires_review_approval=False,
-        build_flags=_doctor_flags,
-        collect_artifacts=_doctor_artifacts,
-        primary_json_report_key="manifest_doctor_json",
-    ),
-    "lint_tool_command": ToolEntry(
-        action="lint_tool_command",
-        script_name="tool_command_linter.py",
-        timeout_seconds=30,
-        requires_review_approval=False,
-        build_flags=_linter_flags,
-        collect_artifacts=_linter_artifacts,
-        primary_json_report_key="command_lint_json",
-    ),
-    "run_semantic_slice": ToolEntry(
-        action="run_semantic_slice",
-        script_name="semantic_slicer_v7.0.py",
-        timeout_seconds=300,
-        requires_review_approval=True,
-        build_flags=_slicer_flags,
-        collect_artifacts=_slicer_artifacts,
-        primary_json_report_key="slicer_json",
-    ),
+    "scan_directory": _entry("scan_directory", "create_file_map_v3.py", 120, False, _scan_flags, _scan_artifacts, "manifest_health_json"),
+    "validate_manifest": _entry("validate_manifest", "manifest_doctor.py", 60, False, _doctor_flags, _doctor_artifacts, "manifest_doctor_json"),
+    "lint_tool_command": _entry("lint_tool_command", "tool_command_linter.py", 30, False, _linter_flags, _linter_artifacts, "command_lint_json"),
+    "run_semantic_slice": _entry("run_semantic_slice", "semantic_slicer_v7.0.py", 300, True, _slicer_flags, _slicer_artifacts, "slicer_json"),
+    "validate_architecture": _entry("validate_architecture", "architecture_validator.py", 120, False, _noop_flags, _noop_artifacts, None),
+    "gate_pipeline": _entry("gate_pipeline", "pipeline_gatekeeper.py", 120, True, _noop_flags, _noop_artifacts, None),
+    "audit_bundle_diff": _entry("audit_bundle_diff", "bundle_diff_auditor.py", 120, False, _noop_flags, _noop_artifacts, None),
+    "package_workspace": _entry("package_workspace", "workspace_packager_v2.4.py", 180, False, _noop_flags, _noop_artifacts, None),
+    "package_notebook": _entry("package_notebook", "notebook_packager_v3.1.py", 180, False, _noop_flags, _noop_artifacts, None),
+    "watch_runtime_end": _entry("watch_runtime_end", "runtime_end_watcher.py", 180, False, _noop_flags, _noop_artifacts, None),
+    "report_oom_forensics": _entry("report_oom_forensics", "oom_forensics_reporter.py", 180, False, _noop_flags, _noop_artifacts, None),
+    "correlate_runtime_slice": _entry("correlate_runtime_slice", "runtime_slice_correlator.py", 180, False, _noop_flags, _noop_artifacts, None),
+    "package_runtime": _entry("package_runtime", "runtime_packager.py", 180, False, _noop_flags, _noop_artifacts, None),
 }
+
 
 #: Frozenset of script filenames that the runner is allowed to execute.
 ALLOWED_SCRIPT_NAMES: frozenset = frozenset(e.script_name for e in REGISTRY.values())
