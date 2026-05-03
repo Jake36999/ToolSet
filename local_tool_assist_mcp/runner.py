@@ -20,7 +20,14 @@ import sys
 from typing import Dict, Optional
 
 from local_tool_assist_mcp.session import TOOLCHAIN_ROOT, save_session
-from local_tool_assist_mcp.tool_registry import REGISTRY, ToolEntry
+from local_tool_assist_mcp.tool_registry import REGISTRY, ToolEntry, ALLOWED_SCRIPT_NAMES
+from local_tool_assist_mcp.policy import (
+    PolicyError,
+    ensure_no_arbitrary_shell,
+    ensure_outputs_outside_toolchain,
+    ensure_slice_prereqs,
+    record_doctor_status,
+)
 
 _TAIL_LINES = 50
 
@@ -183,7 +190,7 @@ def run_action(
         Result conforming to the minimum action result shape.
     """
     session_dir = pathlib.Path(session_dir)
-    _assert_outputs_outside_toolchain(session_dir)
+    ensure_outputs_outside_toolchain(session_dir)
 
     reg = registry if registry is not None else REGISTRY
     cwd = pathlib.Path(toolchain_root) if toolchain_root is not None else TOOLCHAIN_ROOT
@@ -207,11 +214,11 @@ def run_action(
 
     entry: ToolEntry = reg[action_name]
 
-    # -- Review gate ----------------------------------------------------------
-    if entry.requires_review_approval:
-        approved = session_dict.get("review_state", {}).get("slice_approved", False)
-        dev_mode = os.environ.get("LTA_DEV_MODE", "").strip() == "1"
-        if not approved and not dev_mode:
+    # -- Centralized slice policies ---------------------------------------------
+    if action_name == "run_semantic_slice":
+        try:
+            ensure_slice_prereqs(session_dict, os.environ.get("LTA_DEV_MODE", "").strip() == "1", params)
+        except PolicyError as exc:
             ended_at = _now_str()
             result = _make_result(
                 action=action_name,
@@ -220,10 +227,7 @@ def run_action(
                 started_at=started_at,
                 ended_at=ended_at,
                 policy_blocked=True,
-                policy_reason=(
-                    "review_state.slice_approved is false. "
-                    "Set review_state.slice_approved = true or LTA_DEV_MODE=1 to bypass."
-                ),
+                policy_reason=f"{exc.code}: {exc.message}",
             )
             _append_step(session_dict, result)
             if yaml_path:
@@ -249,6 +253,15 @@ def run_action(
         return result
 
     argv = [sys.executable, entry.script_name] + flags
+    try:
+        ensure_no_arbitrary_shell(argv, {e.script_name for e in reg.values()})
+    except PolicyError as exc:
+        ended_at = _now_str()
+        result = _make_result(action_name, "POLICY_BLOCK", -1, started_at, ended_at, policy_blocked=True, policy_reason=f"{exc.code}: {exc.message}")
+        _append_step(session_dict, result)
+        if yaml_path:
+            save_session(session_dict, yaml_path)
+        return result
     safe_env = _build_safe_env()
 
     # -- Execute --------------------------------------------------------------
