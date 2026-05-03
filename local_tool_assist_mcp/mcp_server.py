@@ -13,12 +13,16 @@ import pathlib
 
 from local_tool_assist_mcp.session import (
     DEFAULT_OUTPUT_ROOT,
-    TOOLCHAIN_ROOT,
     create_session as _create_session,
     load_session,
     save_session,
 )
 from local_tool_assist_mcp.runner import run_action
+from local_tool_assist_mcp.policy import (
+    PolicyError,
+    ensure_session_owned_read,
+    ensure_remote_mcp_auth,
+)
 from local_tool_assist_mcp.compiler import (
     _sanitize,
     archive_session_yaml as _archive,
@@ -50,6 +54,9 @@ APPROVED_TOOLS: frozenset = frozenset({
 })
 
 _DEFAULT_READ_LIMIT = 10_000
+
+# Always define mcp symbol for import stability in tests.
+mcp = None
 
 # ---------------------------------------------------------------------------
 # Internal path helpers
@@ -89,12 +96,8 @@ def _is_subpath(child: pathlib.Path, parent: pathlib.Path) -> bool:
         return False
 
 
-def _validate_read_path(path: pathlib.Path, output_root: pathlib.Path) -> None:
-    resolved = path.resolve()
-    if not _is_subpath(resolved, output_root):
-        raise ValueError(f"Path is outside output root: {path}")
-    if _is_subpath(resolved, TOOLCHAIN_ROOT):
-        raise ValueError(f"Path is inside aletheia_toolchain — access denied: {path}")
+def _validate_read_path(path: pathlib.Path, output_root: pathlib.Path, session_dir: pathlib.Path | None = None) -> None:
+    ensure_session_owned_read(path.resolve(), output_root.resolve(), session_dir.resolve() if session_dir else None)
 
 
 # ---------------------------------------------------------------------------
@@ -174,7 +177,7 @@ def _dispatch_read_report(
     else:
         return {"error": "Must provide artifact_key or relative_path"}
 
-    _validate_read_path(path, root)
+    _validate_read_path(path, root, _session_dir_for(session_id, output_root))
 
     if not path.exists():
         return {"error": f"File not found: {path}"}
@@ -351,6 +354,7 @@ def run_stdio() -> None:
         raise ImportError(
             "mcp / FastMCP is required. Install with: pip install mcp"
         )
+    ensure_remote_mcp_auth(__import__("os").environ.get("LTA_REMOTE_MCP_URL", ""))
     mcp.run(transport="stdio")
 
 

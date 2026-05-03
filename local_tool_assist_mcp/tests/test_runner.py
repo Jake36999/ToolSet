@@ -358,6 +358,8 @@ class TestReviewGate(unittest.TestCase):
             "slice test", "/repo", output_root=self.output_root
         )
         self._test_registry = _make_test_registry()
+        self.session_dict["artifacts"]["manifest_doctor_json"] = str(self.session_dir / "intermediate" / "manifest_doctor.json")
+        self.session_dict.setdefault("latest", {})["manifest_doctor_status"] = "PASS"
 
     def tearDown(self):
         self._tmpdir.cleanup()
@@ -390,7 +392,7 @@ class TestReviewGate(unittest.TestCase):
             toolchain_root=str(_FIXTURES),
             registry=self._test_registry,
         )
-        self.assertIn("slice_approved", result["policy"]["reason"])
+        self.assertIn("REVIEW_APPROVAL_REQUIRED", result["policy"]["reason"])
 
     def test_allows_slice_when_approved(self):
         self.session_dict["review_state"]["slice_approved"] = True
@@ -443,6 +445,8 @@ class TestRunActionIntegration(unittest.TestCase):
             "integration test", "/fake/repo", output_root=self.output_root
         )
         self._test_registry = _make_test_registry()
+        self.session_dict["artifacts"]["manifest_doctor_json"] = str(self.session_dir / "intermediate" / "manifest_doctor.json")
+        self.session_dict.setdefault("latest", {})["manifest_doctor_status"] = "PASS"
         os.environ.pop("FAKE_SCANNER_EXIT", None)
         os.environ.pop("FAKE_DOCTOR_EXIT", None)
         os.environ.pop("FAKE_DOCTOR_ERROR", None)
@@ -598,6 +602,8 @@ class TestRunActionSessionMutation(unittest.TestCase):
             "mutation test", "/repo", output_root=self.output_root
         )
         self._test_registry = _make_test_registry()
+        self.session_dict["artifacts"]["manifest_doctor_json"] = str(self.session_dir / "intermediate" / "manifest_doctor.json")
+        self.session_dict.setdefault("latest", {})["manifest_doctor_status"] = "PASS"
 
     def tearDown(self):
         self._tmpdir.cleanup()
