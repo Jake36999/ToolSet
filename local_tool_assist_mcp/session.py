@@ -1,6 +1,7 @@
 """Session creation, persistence, and review-state management for Local Tool Assist."""
 
 import datetime
+from dataclasses import dataclass
 import os
 import pathlib
 import random
@@ -27,7 +28,7 @@ DEFAULT_OUTPUT_ROOT: pathlib.Path = _TOOLSET_ROOT / "local_tool_assist_outputs"
 TOOLCHAIN_ROOT: pathlib.Path = _TOOLSET_ROOT / "aletheia_toolchain"
 
 #: Subdirectories created under the output root on every session.
-_OUTPUT_SUBDIRS = ("sessions", "intermediate", "reports", "archive", "logs")
+_OUTPUT_SUBDIRS = ("sessions", "reports", "bundles", "archive")
 
 _SESSION_ID_RE = re.compile(r"^lta_[0-9]{8}T[0-9]{6}Z_[a-z0-9]{6}$")
 
@@ -52,6 +53,69 @@ def _resolve_output_root(output_root=None) -> pathlib.Path:
     if env:
         return pathlib.Path(env)
     return DEFAULT_OUTPUT_ROOT
+
+
+def _is_relative_to(path: pathlib.Path, root: pathlib.Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+@dataclass(frozen=True)
+class SessionPaths:
+    toolset_root: pathlib.Path
+    toolchain_root: pathlib.Path
+    output_root: pathlib.Path
+    sessions_root: pathlib.Path
+    reports_root: pathlib.Path
+    bundles_root: pathlib.Path
+    archive_root: pathlib.Path
+
+    def __post_init__(self):
+        toolset_root = pathlib.Path(self.toolset_root).resolve()
+        toolchain_root = pathlib.Path(self.toolchain_root).resolve()
+        output_root = pathlib.Path(self.output_root).resolve()
+        sessions_root = pathlib.Path(self.sessions_root).resolve()
+        reports_root = pathlib.Path(self.reports_root).resolve()
+        bundles_root = pathlib.Path(self.bundles_root).resolve()
+        archive_root = pathlib.Path(self.archive_root).resolve()
+
+        if toolchain_root.name != "aletheia_toolchain":
+            raise ValueError("toolchain_root.name must be 'aletheia_toolchain'")
+        if _is_relative_to(output_root, toolchain_root):
+            raise ValueError("output_root must be outside toolchain_root")
+
+        for label, path in (
+            ("sessions_root", sessions_root),
+            ("reports_root", reports_root),
+            ("bundles_root", bundles_root),
+            ("archive_root", archive_root),
+        ):
+            if _is_relative_to(path, toolchain_root):
+                raise ValueError(f"{label} must be outside toolchain_root")
+
+        object.__setattr__(self, "toolset_root", toolset_root)
+        object.__setattr__(self, "toolchain_root", toolchain_root)
+        object.__setattr__(self, "output_root", output_root)
+        object.__setattr__(self, "sessions_root", sessions_root)
+        object.__setattr__(self, "reports_root", reports_root)
+        object.__setattr__(self, "bundles_root", bundles_root)
+        object.__setattr__(self, "archive_root", archive_root)
+
+
+def build_session_paths(output_root=None) -> SessionPaths:
+    root = _resolve_output_root(output_root)
+    return SessionPaths(
+        toolset_root=_TOOLSET_ROOT,
+        toolchain_root=TOOLCHAIN_ROOT,
+        output_root=root,
+        sessions_root=root / "sessions",
+        reports_root=root / "reports",
+        bundles_root=root / "bundles",
+        archive_root=root / "archive",
+    )
 
 
 def _now_str() -> str:
@@ -147,12 +211,12 @@ def create_session(
     :class:`pathlib.Path`.  The output root and all five standard
     subdirectories are created with ``exist_ok=True``.
     """
-    root = _resolve_output_root(output_root)
-    for subdir in _OUTPUT_SUBDIRS:
-        (root / subdir).mkdir(parents=True, exist_ok=True)
+    paths = build_session_paths(output_root)
+    for subdir in (paths.sessions_root, paths.reports_root, paths.bundles_root, paths.archive_root):
+        subdir.mkdir(parents=True, exist_ok=True)
 
     session_id = generate_session_id()
-    session_dir = root / "sessions" / session_id
+    session_dir = paths.sessions_root / session_id
     session_dir.mkdir(parents=True, exist_ok=True)
 
     return _build_session_dict(session_id, objective, target_repo, requested_by, downstream_agent), session_dir

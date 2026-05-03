@@ -182,6 +182,49 @@ class TestCreateSession(unittest.TestCase):
                 else:
                     os.environ["LTA_OUTPUT_ROOT"] = prev
 
+    def test_rejects_output_root_inside_toolchain(self):
+        with self.assertRaises(ValueError):
+            sess.create_session(
+                "obj",
+                "/repo",
+                output_root=sess.TOOLCHAIN_ROOT / "local_tool_assist_outputs",
+            )
+
+
+class TestSessionPaths(unittest.TestCase):
+
+    def setUp(self):
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self.temp_root = pathlib.Path(self._tmpdir.name)
+
+    def tearDown(self):
+        self._tmpdir.cleanup()
+
+    def test_toolchain_name_must_match(self):
+        with self.assertRaises(ValueError):
+            sess.SessionPaths(
+                toolset_root=self.temp_root,
+                toolchain_root=self.temp_root / "wrong_toolchain",
+                output_root=self.temp_root / "local_tool_assist_outputs",
+                sessions_root=self.temp_root / "local_tool_assist_outputs" / "sessions",
+                reports_root=self.temp_root / "local_tool_assist_outputs" / "reports",
+                bundles_root=self.temp_root / "local_tool_assist_outputs" / "bundles",
+                archive_root=self.temp_root / "local_tool_assist_outputs" / "archive",
+            )
+
+    def test_rejects_generated_paths_inside_toolchain(self):
+        toolchain_root = self.temp_root / "aletheia_toolchain"
+        with self.assertRaises(ValueError):
+            sess.SessionPaths(
+                toolset_root=self.temp_root,
+                toolchain_root=toolchain_root,
+                output_root=self.temp_root / "safe_outputs",
+                sessions_root=toolchain_root / "local_tool_assist_outputs" / "sessions",
+                reports_root=self.temp_root / "safe_outputs" / "reports",
+                bundles_root=self.temp_root / "safe_outputs" / "bundles",
+                archive_root=self.temp_root / "safe_outputs" / "archive",
+            )
+
 
 # ---------------------------------------------------------------------------
 # save_session / load_session round-trip
