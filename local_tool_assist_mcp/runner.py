@@ -252,7 +252,7 @@ def run_action(
             save_session(session_dict, yaml_path)
         return result
 
-    argv = [sys.executable, entry.script_name] + flags
+    argv = [str(sys.executable), str(entry.script_name)] + [str(flag) for flag in flags]
     try:
         ensure_no_arbitrary_shell(argv, {e.script_name for e in reg.values()})
     except PolicyError as exc:
