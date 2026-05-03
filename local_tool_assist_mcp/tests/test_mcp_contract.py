@@ -330,6 +330,9 @@ class TestDispatchRunnerActions(unittest.TestCase):
         yp = self._root / "sessions" / self._session_id / "session.yaml"
         sd = load_session(yp)
         sd["review_state"]["slice_approved"] = True
+        sd.setdefault("artifacts", {})["manifest_csv"] = "/fake/file_map.csv"
+        sd["artifacts"]["manifest_doctor_json"] = "/fake/manifest_doctor.json"
+        sd.setdefault("latest", {})["manifest_doctor_status"] = "PASS"
         save_session(sd, yp)
 
         result = _dispatch_runner_action(
@@ -445,8 +448,8 @@ class TestReadReportSafety(unittest.TestCase):
             "obj", "/repo", output_root=str(self._root)
         )
         self._session_id = create_result["session_id"]
-        # Write a known file inside output_root for valid-read tests
-        reports_dir = self._root / "reports"
+        # Write known files inside session-owned directory for valid-read tests
+        reports_dir = self._root / "sessions" / self._session_id / "reports"
         reports_dir.mkdir(parents=True, exist_ok=True)
         self._test_file = reports_dir / "test_output.txt"
         self._test_file.write_text("hello world\nline2", encoding="utf-8")
@@ -455,7 +458,8 @@ class TestReadReportSafety(unittest.TestCase):
         self._tmpdir.cleanup()
 
     def test_rejects_absolute_path_outside_output_root(self):
-        with self.assertRaises(ValueError):
+        from local_tool_assist_mcp.policy import PolicyError
+        with self.assertRaises((ValueError, PolicyError)):
             _dispatch_read_report(
                 self._session_id,
                 relative_path="C:/Windows/System32/drivers/etc/hosts",
@@ -471,14 +475,16 @@ class TestReadReportSafety(unittest.TestCase):
             )
 
     def test_rejects_path_inside_toolchain(self):
-        with self.assertRaises(ValueError):
+        from local_tool_assist_mcp.policy import PolicyError
+        with self.assertRaises(PolicyError):
             _validate_read_path(TOOLCHAIN_ROOT / "some_file.py", self._root)
 
     def test_rejects_path_outside_output_root(self):
         outside = pathlib.Path(tempfile.gettempdir()) / "outside.txt"
         outside.write_text("x")
         try:
-            with self.assertRaises(ValueError):
+            from local_tool_assist_mcp.policy import PolicyError
+            with self.assertRaises(PolicyError):
                 _validate_read_path(outside, self._root)
         finally:
             outside.unlink(missing_ok=True)
@@ -486,7 +492,7 @@ class TestReadReportSafety(unittest.TestCase):
     def test_reads_valid_relative_path(self):
         result = _dispatch_read_report(
             self._session_id,
-            relative_path="reports/test_output.txt",
+            relative_path=f"sessions/{self._session_id}/reports/test_output.txt",
             output_root=str(self._root),
         )
         self.assertIn("content", result)
@@ -495,7 +501,7 @@ class TestReadReportSafety(unittest.TestCase):
     def test_max_chars_truncates_content(self):
         result = _dispatch_read_report(
             self._session_id,
-            relative_path="reports/test_output.txt",
+            relative_path=f"sessions/{self._session_id}/reports/test_output.txt",
             max_chars=5,
             output_root=str(self._root),
         )
@@ -503,11 +509,11 @@ class TestReadReportSafety(unittest.TestCase):
         self.assertTrue(result["truncated"])
 
     def test_redacts_secrets_in_content(self):
-        sensitive_file = self._root / "reports" / "sensitive.txt"
+        sensitive_file = self._root / "sessions" / self._session_id / "reports" / "sensitive.txt"
         sensitive_file.write_text("MY_API_KEY=sk-secret123\nother line", encoding="utf-8")
         result = _dispatch_read_report(
             self._session_id,
-            relative_path="reports/sensitive.txt",
+            relative_path=f"sessions/{self._session_id}/reports/sensitive.txt",
             output_root=str(self._root),
         )
         # Should not contain raw secret
@@ -532,7 +538,7 @@ class TestReadReportSafety(unittest.TestCase):
         # This test is its own proof — it runs without any MCP transport
         result = _dispatch_read_report(
             self._session_id,
-            relative_path="reports/test_output.txt",
+            relative_path=f"sessions/{self._session_id}/reports/test_output.txt",
             output_root=str(self._root),
         )
         self.assertIn("content", result)

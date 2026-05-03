@@ -11,9 +11,9 @@ _FIX = pathlib.Path(__file__).parent / "fixtures"
 
 def _registry():
     return {
-        "scan_directory": ToolEntry("scan_directory", "fake_scanner.py", 15, False, _scan_flags, _scan_artifacts, "manifest_health_json"),
-        "validate_manifest": ToolEntry("validate_manifest", "fake_doctor.py", 15, False, _doctor_flags, _doctor_artifacts, "manifest_doctor_json"),
-        "run_semantic_slice": ToolEntry("run_semantic_slice", "fake_slicer.py", 15, True, _slicer_flags, _slicer_artifacts, "slicer_json"),
+        "scan_directory": ToolEntry(action="scan_directory", script_name="fake_scanner.py", timeout_seconds=15, requires_review_approval=False, build_flags=_scan_flags, collect_artifacts=_scan_artifacts, primary_json_report_key="manifest_health_json"),
+        "validate_manifest": ToolEntry(action="validate_manifest", script_name="fake_doctor.py", timeout_seconds=15, requires_review_approval=False, build_flags=_doctor_flags, collect_artifacts=_doctor_artifacts, primary_json_report_key="manifest_doctor_json"),
+        "run_semantic_slice": ToolEntry(action="run_semantic_slice", script_name="fake_slicer.py", timeout_seconds=15, requires_review_approval=True, build_flags=_slicer_flags, collect_artifacts=_slicer_artifacts, primary_json_report_key="slicer_json"),
     }
 
 
