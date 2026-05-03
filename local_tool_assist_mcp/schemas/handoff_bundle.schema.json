@@ -1,0 +1,23 @@
+# JSON Schema for Handoff Bundle
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "artifactPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sessionMetadata": {
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string" },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sessionId", "created", "updated"]
+    }
+  },
+  "required": ["artifactPaths", "sessionMetadata"]
+}
